@@ -25,5 +25,6 @@ jobs:
     - name: Commit file
       run: |
         git config --global user.name 'GitHub Actions'
-        git commit -am "Add image"
+        git add .
+        git commit -m "Add image"
         git push
