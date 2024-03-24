@@ -21,7 +21,7 @@ jobs:
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Fetch image
       run: |
         wget "https://kunde.byggekamera.no/?u=obos-fornebu&camera=BK0104&width=fullsize" -O "archive/$(date '+%Y-%m-%d_%H:%M:%S').png"
