@@ -37,7 +37,7 @@ jobs:
           ')
     - name: Fetch image
       run: |
-        wget "https://kunde.byggekamera.no/?u=obos-fornebu&camera=BK0104&width=fullsize" -O "archive/$(date '+%Y')/$(date '%m')/$(date '+%Y-%m-%d_%H:%M:%S').png"
+        wget "https://kunde.byggekamera.no/?u=obos-fornebu&camera=BK0104&width=fullsize" -O "archive/$(date '+%Y')/$(date '+%m')/$(date '+%Y-%m-%d_%H:%M:%S').png"
     - name: Commit file
       run: |
         git config --global user.name 'GitHub Actions'
