@@ -1,0 +1,88 @@
+:root {
+  color-scheme: dark light;
+  font-family: "Inter", "Segoe UI", sans-serif;
+  line-height: 1.5;
+  background: #0c1a27;
+  color: #f4f7fb;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  background: radial-gradient(circle at top, #1f3d5a, #0c1a27 60%);
+}
+
+.page {
+  width: min(960px, 100vw);
+  padding: 3rem 1.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.hero h1 {
+  margin: 0;
+  font-size: clamp(2.25rem, 4vw, 3rem);
+  letter-spacing: 0.03em;
+}
+
+.hero p {
+  margin-top: 0.75rem;
+  max-width: 60ch;
+  color: rgba(244, 247, 251, 0.85);
+}
+
+.player {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: center;
+}
+
+.timelapse {
+  width: min(100%, 840px);
+  border-radius: 16px;
+  box-shadow: 0 24px 60px rgba(5, 14, 26, 0.5);
+  background: #09131d;
+}
+
+.note {
+  margin: 0;
+  text-align: center;
+  color: rgba(244, 247, 251, 0.7);
+}
+
+.note a {
+  color: inherit;
+  font-weight: 600;
+}
+
+.footer {
+  font-size: 0.9rem;
+  color: rgba(244, 247, 251, 0.6);
+}
+
+.footer a {
+  color: inherit;
+}
+
+@media (max-width: 600px) {
+  body {
+    background: #0c1a27;
+  }
+
+  .page {
+    padding: 2.5rem 1rem 1.5rem;
+  }
+
+  .timelapse {
+    border-radius: 12px;
+  }
+}
