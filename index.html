@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Nansenløkka Timelapse</title>
+    <meta
+      name="description"
+      content="Watch a continuously refreshed timelapse of the Nansenløkka webcam archive."
+    />
+    <link rel="stylesheet" href="assets/styles.css" />
+  </head>
+  <body>
+    <div class="page">
+      <header class="hero">
+        <h1>Nansenløkka Timelapse</h1>
+        <p>
+          A continuously updated video made from the latest frames captured by the public
+          webcam overlooking Nansenløkka.
+        </p>
+      </header>
+
+      <main class="player">
+        <video
+          class="timelapse"
+          controls
+          autoplay
+          loop
+          muted
+          playsinline
+          preload="metadata"
+        >
+          <source src="assets/timelapse.mp4" type="video/mp4" />
+          Your browser does not support the HTML5 video tag. You can
+          <a href="assets/timelapse.mp4">download the timelapse</a> instead.
+        </video>
+        <p class="note">
+          The timelapse is regenerated automatically by a GitHub Action whenever new images are
+          added to the archive.
+        </p>
+      </main>
+
+      <footer class="footer">
+        <p>
+          Built for GitHub Pages. View the source on
+          <a href="https://github.com/" rel="noreferrer" target="_blank">GitHub</a>.
+        </p>
+      </footer>
+    </div>
+  </body>
+</html>
