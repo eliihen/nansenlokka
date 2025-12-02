@@ -1,0 +1,11 @@
+{
+  "name": "nansenlokka-timelapse",
+  "version": "1.0.0",
+  "description": "Local server and tooling for the Nansenløkka timelapse viewer.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node scripts/dev-server.js",
+    "clean:manifest": "node scripts/clean_manifest.js"
+  }
+}
