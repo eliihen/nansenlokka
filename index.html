@@ -91,6 +91,7 @@
       const FRAME_INTERVAL = 1000 / TARGET_FPS;
       const MAX_BUFFERED_FRAMES = 600;
       const MAX_CONCURRENT_FETCHES = 12;
+      const RAW_BASE = "https://raw.githubusercontent.com/eliihen/nansenlokka/main/";
 
       let frames = [];
       let playing = true;
@@ -200,7 +201,7 @@
       async function prefetchInServiceWorker(images) {
         if (!("serviceWorker" in navigator)) return;
         const registration = await navigator.serviceWorker.ready;
-        const urls = images.map((image) => new URL(image.path, window.location.href).href);
+        const urls = images.map((image) => resolveImageUrl(image.path));
         registration.active?.postMessage({ type: "prefetch", urls });
       }
 
@@ -229,7 +230,7 @@
 
       async function decodeFrame(image) {
         statusEl.textContent = "Buffering frames…";
-        const response = await fetch(image.path, { cache: "force-cache" });
+        const response = await fetch(resolveImageUrl(image.path), { cache: "force-cache" });
         if (!response.ok) {
           throw new Error(`Failed to load frame: ${image.path}`);
         }
@@ -285,6 +286,14 @@
       function drawFrame(frame) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(frame, 0, 0, canvas.width, canvas.height);
+      }
+
+      function resolveImageUrl(imagePath) {
+        if (typeof imagePath !== "string") return imagePath;
+        if (imagePath.startsWith("http://") || imagePath.startsWith("https://")) {
+          return imagePath;
+        }
+        return new URL(imagePath.replace(/^\\/, ""), RAW_BASE).href;
       }
 
       function formatDate(isoString) {

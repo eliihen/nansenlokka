@@ -21,8 +21,18 @@ jobs:
       url: ${{ steps.deploy.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - name: Check out repository
+      - name: Check out (sparse)
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          sparse-checkout: |
+            index.html
+            assets
+            manifest.json
+            service-worker.js
+            scripts
+            package.json
+          sparse-checkout-cone-mode: true
 
       - name: Upload static site
         uses: actions/upload-pages-artifact@v3
