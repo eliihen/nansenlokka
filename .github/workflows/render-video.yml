@@ -59,7 +59,7 @@ jobs:
           while read -r MONTH; do
             if [ -z "$MONTH" ]; then continue; fi
             echo "Processing $MONTH"
-            git sparse-checkout set assets scripts index.html "$MONTH"
+            git sparse-checkout set assets scripts "$MONTH"
             OUT_NAME=$(echo "$MONTH" | sed 's#/#-#g').mp4
             node scripts/render_video.js month --source "$MONTH" --output "$TMP_DIR/$OUT_NAME" --fps "$FPS"
           done < "$MONTHS_FILE"
@@ -70,7 +70,7 @@ jobs:
           TMP_DIR: /tmp/monthly_videos
         run: |
           set -euo pipefail
-          git sparse-checkout set assets scripts index.html
+          git sparse-checkout set assets scripts
           mkdir -p assets
           INPUTS=$(ls "$TMP_DIR"/*.mp4 | sort)
           node scripts/render_video.js concat --inputs $INPUTS --output assets/timelapse.mp4
