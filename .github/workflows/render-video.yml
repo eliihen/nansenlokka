@@ -5,7 +5,7 @@ on:
     branches: [main]
     paths:
       - "archive/**"
-      - "scripts/render_video.py"
+      - "scripts/render_video.js"
       - ".github/workflows/render-video.yml"
       - "index.html"
       - "assets/**"
@@ -77,10 +77,6 @@ jobs:
 
       - name: Commit updated video
         run: |
-          if git diff --quiet -- assets/timelapse.mp4; then
-            echo "No changes to timelapse."
-            exit 0
-          fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add assets/timelapse.mp4
