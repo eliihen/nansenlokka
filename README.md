@@ -1,49 +1,43 @@
 # Nansenløkka
 
-Archives photos from a public webcam showing Nansenløkka and serves them as a fast,
-browser-rendered timelapse.
+Archives photos from a public webcam showing Nansenløkka and serves them as a
+pre-rendered MP4 timelapse.
 
 ## Timelapse website
 
-- `index.html` fetches `manifest.json`, buffers the listed frames client-side, and plays
-  them back at 30 fps via a canvas-based slideshow.
-- The latest static site is deployed automatically to GitHub Pages from the `main`
-  branch (`.github/workflows/pages.yml`).
-- For memory safety the viewer buffers a capped, stride-sampled set of frames while still
-  covering the whole timeline.
+- `index.html` serves a single pre-rendered `assets/timelapse.mp4`.
+- The latest static site is deployed automatically to GitHub Pages from `main`
+  (`.github/workflows/pages.yml`).
+- The video is rebuilt after every commit: each archive month renders separately, then all
+  months are concatenated in order.
 
-## Image ingestion and manifest
+## Image ingestion and rendering pipeline
 
-- `.github/workflows/fetch-image.yml` captures a new frame hourly, writes it under
-  `archive/YYYY/MM/`, appends the new entry to `manifest.json`, and commits both. Frames
-  outside 07:00–18:00 UTC are ignored.
-- You can rebuild/append to the manifest locally with Node:
+- `.github/workflows/fetch-image.yml` captures a new frame hourly under
+  `archive/YYYY/MM/`. Frames outside 07:00–18:00 UTC are ignored.
+- `.github/workflows/render-video.yml` runs on each push:
+  - Determines available months without checking out the archive.
+  - Sparse-checks out one month at a time, renders a monthly MP4 with FFmpeg, writes it to
+    `/tmp`.
+  - After all months are processed, concatenates the month videos into
+    `assets/timelapse.mp4`.
+  - Only one month is checked out at any point to keep disk usage low.
+- Local rendering (single month then concat):
 
   ```bash
-  node scripts/build_manifest.js --image "archive/YYYY/MM/your-file.png"
+  node scripts/render_video.js month --source archive/YYYY/MM --output /tmp/month.mp4
+  node scripts/render_video.js concat --inputs /tmp/month.mp4 --output assets/timelapse.mp4
   ```
 
-  This produces a JSON document with metadata, total count, and a path to each frame the
-  viewer can buffer.
-
-To clean an existing manifest (remove out-of-window or malformed entries) run:
-
-```bash
-npm run clean:manifest
-```
+  Add more monthly inputs to the concat command as needed.
 
 ## Local preview
 
-Serve the root of the repo (so `manifest.json` is reachable) with the built-in Node server
-to avoid `file://` CORS restrictions:
+Serve the root of the repo with the built-in Node server to avoid `file://`
+restrictions:
 
 ```bash
 npm start
 ```
 
 Then open http://localhost:8000 to see the timelapse.
-
-## Offline caching
-
-A service worker (`service-worker.js`) caches the timelapse images in the background once
-the page loads, so revisits should replay quickly even with spotty connectivity.

@@ -6,7 +6,7 @@
     <title>Nansenløkka Timelapse</title>
     <meta
       name="description"
-      content="A browser-rendered timelapse of the Nansenløkka webcam archive, buffered client-side for smooth playback."
+      content="A pre-rendered MP4 timelapse of the Nansenløkka webcam archive, refreshed on every commit."
     />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -15,291 +15,49 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="assets/styles.css" />
-    <link rel="manifest" href="manifest.json" />
   </head>
   <body>
     <div class="gradient"></div>
     <div class="layout">
       <header class="header">
-        <p class="eyebrow">Nansenløkka // Live archive</p>
-        <h1>Timelapse, rendered on the fly.</h1>
+        <p class="eyebrow">Nansenløkka // Timelapse</p>
+        <h1>Pre-rendered and refreshed on every commit.</h1>
         <p class="lede">
-          Every captured frame is buffered in your browser, then played back at 30 fps for a
-          cinema-speed glimpse of Nansenløkka.
+          Each push renders monthly clips with FFmpeg, then stitches them into a single MP4. No
+          client-side buffering—just hit play.
         </p>
       </header>
 
       <main class="main">
         <section class="stage">
-          <div class="frame">
-            <canvas id="slideshow" aria-label="Timelapse slideshow"></canvas>
-            <div class="scrim" id="loading">
-              <div class="loader">
-                <p class="status" id="status">Buffering frames…</p>
-                <div class="progress">
-                  <div class="progress-bar" id="progress-bar"></div>
-                </div>
-                <p class="meta" id="meta">Preparing manifest</p>
-              </div>
-            </div>
+          <div class="frame video-shell">
+            <video
+              class="timelapse"
+              controls
+              autoplay
+              loop
+              muted
+              playsinline
+              preload="auto"
+            >
+              <source src="assets/timelapse.mp4" type="video/mp4" />
+              Your browser does not support the HTML5 video tag. You can
+              <a href="assets/timelapse.mp4">download the timelapse</a> instead.
+            </video>
           </div>
-
-          <div class="controls">
-            <button type="button" id="play-pause" class="button">Pause</button>
-            <div class="stat">
-              <span>Frames</span>
-              <strong id="frame-count">—</strong>
-            </div>
-            <div class="stat">
-              <span>Updated</span>
-              <strong id="updated">—</strong>
-            </div>
-            <div class="stat">
-              <span>Buffer</span>
-              <strong id="buffer">—</strong>
-            </div>
-            <div class="scrubber">
-              <label for="scrub">Scrub timeline</label>
-              <input type="range" id="scrub" min="0" max="0" value="0" step="1" />
-            </div>
+          <div class="controls single">
+            <a class="button" href="assets/timelapse.mp4" download>Download MP4</a>
+            <p class="note">
+              Clips are rendered one month at a time from daylight frames, then concatenated in
+              chronological order to keep build sizes lean.
+            </p>
           </div>
         </section>
       </main>
 
       <footer class="footer">
-        <p>
-          Frames update automatically via GitHub Actions. Reload to fetch the newest manifest and
-          buffer the latest sequence.
-        </p>
+        <p>The video refreshes automatically after each commit.</p>
       </footer>
     </div>
-
-    <script type="module">
-      const canvas = document.getElementById("slideshow");
-      const ctx = canvas.getContext("2d");
-      const loading = document.getElementById("loading");
-      const statusEl = document.getElementById("status");
-      const progressBar = document.getElementById("progress-bar");
-      const metaEl = document.getElementById("meta");
-      const frameCountEl = document.getElementById("frame-count");
-      const updatedEl = document.getElementById("updated");
-      const bufferEl = document.getElementById("buffer");
-      const playPauseBtn = document.getElementById("play-pause");
-      const scrubber = document.getElementById("scrub");
-
-      const TARGET_FPS = 30;
-      const FRAME_INTERVAL = 1000 / TARGET_FPS;
-      const MAX_BUFFERED_FRAMES = 600;
-      const MAX_CONCURRENT_FETCHES = 12;
-      const RAW_BASE = "https://raw.githubusercontent.com/eliihen/nansenlokka/main/";
-
-      let frames = [];
-      let playing = true;
-      let frameIndex = 0;
-      let lastFrameTime = 0;
-      let stride = 1;
-      let isScrubbing = false;
-
-      playPauseBtn.addEventListener("click", () => {
-        if (!frames.length) return;
-        playing = !playing;
-        playPauseBtn.textContent = playing ? "Pause" : "Play";
-        if (playing) {
-          requestAnimationFrame(loop);
-        }
-      });
-
-      scrubber.addEventListener("input", (event) => {
-        if (!frames.length) return;
-        isScrubbing = true;
-        playing = false;
-        playPauseBtn.textContent = "Play";
-        frameIndex = Number(event.target.value) || 0;
-        drawFrame(frames[frameIndex % frames.length]);
-      });
-
-      ["pointerup", "mouseup", "touchend"].forEach((evt) =>
-        scrubber.addEventListener(evt, () => {
-          isScrubbing = false;
-        }),
-      );
-
-      init().catch((error) => {
-        statusEl.textContent = "Could not load timelapse.";
-        const needsServer =
-          typeof window !== "undefined" && window.location.protocol === "file:";
-        metaEl.textContent = needsServer
-          ? "Run a local server (e.g. python3 -m http.server) to avoid file:// restrictions."
-          : error.message;
-        console.error(error);
-      });
-
-      async function init() {
-        registerServiceWorker();
-        const manifest = await fetchManifest();
-        updatedEl.textContent = manifest.generated_at
-          ? formatDate(manifest.generated_at)
-          : "Unknown";
-        frameCountEl.textContent = manifest.count?.toLocaleString?.() ?? "—";
-
-        const { frames: selectedImages, step } = selectFrames(manifest.images || []);
-        if (!selectedImages.length) {
-          statusEl.textContent = "No frames available.";
-          metaEl.textContent = "Manifest has zero images.";
-          return;
-        }
-
-        prefetchInServiceWorker(selectedImages);
-
-        const { bitmaps, usedStride } = await preloadImages(selectedImages, step);
-        frames = bitmaps;
-        stride = usedStride;
-        bufferEl.textContent = `${frames.length} buffered (every ${stride}th frame)`;
-        const seconds = (frames.length / TARGET_FPS).toFixed(1);
-        metaEl.textContent = `Buffered ${frames.length.toLocaleString()} frames (~${seconds}s @ ${TARGET_FPS}fps).`;
-        scrubber.max = Math.max(0, frames.length - 1);
-        scrubber.value = 0;
-
-        sizingFrom(frames[0]);
-        hideLoading();
-
-        requestAnimationFrame(loop);
-      }
-
-      async function fetchManifest() {
-        const response = await fetch("manifest.json", { cache: "no-cache" });
-        if (!response.ok) throw new Error("Failed to fetch manifest.");
-        return response.json();
-      }
-
-      function selectFrames(images) {
-        if (!Array.isArray(images)) return { frames: [], step: 1 };
-        if (images.length <= MAX_BUFFERED_FRAMES) {
-          metaEl.textContent = `Buffering all ${images.length.toLocaleString()} frames.`;
-          return {
-            frames: images.map((image, idx) => ({ ...image, order: idx })),
-            step: 1,
-          };
-        }
-        const step = Math.ceil(images.length / MAX_BUFFERED_FRAMES);
-        metaEl.textContent = `Buffering every ${step}th frame (${MAX_BUFFERED_FRAMES.toLocaleString()} total).`;
-        return {
-          frames: images
-            .map((image, idx) => ({ ...image, order: idx }))
-            .filter((image) => image.order % step === 0 || image.order === images.length - 1),
-          step,
-        };
-      }
-
-      function registerServiceWorker() {
-        if (!("serviceWorker" in navigator)) return;
-        navigator.serviceWorker.register("service-worker.js").catch((error) => {
-          console.warn("Service worker registration failed", error);
-        });
-      }
-
-      async function prefetchInServiceWorker(images) {
-        if (!("serviceWorker" in navigator)) return;
-        const registration = await navigator.serviceWorker.ready;
-        const urls = images.map((image) => resolveImageUrl(image.path));
-        registration.active?.postMessage({ type: "prefetch", urls });
-      }
-
-      async function preloadImages(images, step) {
-        const queue = [...images];
-        const results = [];
-        let completed = 0;
-
-        async function worker() {
-          while (queue.length) {
-            const image = queue.shift();
-            if (!image) break;
-            const bitmap = await decodeFrame(image);
-            results.push(bitmap);
-            completed += 1;
-            updateProgress(completed, images.length);
-          }
-        }
-
-        const concurrency = Math.min(MAX_CONCURRENT_FETCHES, images.length);
-        await Promise.all(Array.from({ length: concurrency }, worker));
-        results.sort((a, b) => a.index - b.index);
-        const usedStride = Math.max(1, step || 1);
-        return { bitmaps: results.map((item) => item.bitmap), usedStride };
-      }
-
-      async function decodeFrame(image) {
-        statusEl.textContent = "Buffering frames…";
-        const response = await fetch(resolveImageUrl(image.path), { cache: "force-cache" });
-        if (!response.ok) {
-          throw new Error(`Failed to load frame: ${image.path}`);
-        }
-        const blob = await response.blob();
-        const bitmap =
-          "createImageBitmap" in window
-            ? await createImageBitmap(blob)
-            : await loadImageElement(blob);
-        return { bitmap, index: image.order, path: image.path };
-      }
-
-      function loadImageElement(blob) {
-        return new Promise((resolve, reject) => {
-          const img = new Image();
-          const url = URL.createObjectURL(blob);
-          img.onload = () => {
-            URL.revokeObjectURL(url);
-            resolve(img);
-          };
-          img.onerror = reject;
-          img.src = url;
-        });
-      }
-
-      function sizingFrom(frame) {
-        canvas.width = frame.width;
-        canvas.height = frame.height;
-      }
-
-      function hideLoading() {
-        loading.classList.add("hidden");
-      }
-
-      function updateProgress(done, total) {
-        const percent = total === 0 ? 0 : Math.round((done / total) * 100);
-        progressBar.style.width = `${percent}%`;
-        statusEl.textContent = `Buffered ${done} of ${total}`;
-      }
-
-      function loop(timestamp) {
-        if (!playing || !frames.length) return;
-        if (timestamp - lastFrameTime >= FRAME_INTERVAL) {
-          drawFrame(frames[frameIndex]);
-          frameIndex = (frameIndex + 1) % frames.length;
-          if (!isScrubbing) {
-            scrubber.value = frameIndex;
-          }
-          lastFrameTime = timestamp;
-        }
-        requestAnimationFrame(loop);
-      }
-
-      function drawFrame(frame) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(frame, 0, 0, canvas.width, canvas.height);
-      }
-
-      function resolveImageUrl(imagePath) {
-        if (typeof imagePath !== "string") return imagePath;
-        if (imagePath.startsWith("http://") || imagePath.startsWith("https://")) {
-          return imagePath;
-        }
-        return new URL(imagePath.replace(/^\\/, ""), RAW_BASE).href;
-      }
-
-      function formatDate(isoString) {
-        const date = new Date(isoString);
-        return isNaN(date.getTime()) ? isoString : date.toLocaleString();
-      }
-    </script>
   </body>
 </html>

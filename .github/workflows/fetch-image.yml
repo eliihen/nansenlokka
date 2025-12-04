@@ -26,28 +26,16 @@ jobs:
         fetch-depth: 1
         sparse-checkout: |
           README.md
-          manifest.json
-          scripts
           .github/workflows/fetch-image.yml
         sparse-checkout-cone-mode: true
-    - name: Expand sparse checkout for current month
-      run: |
-        YEAR=$(date '+%Y')
-        MONTH=$(date '+%m')
-        TARGET_DIR="archive/$YEAR/$MONTH"
-        git sparse-checkout add "$TARGET_DIR"
-        echo "TARGET_DIR=$TARGET_DIR" >> "$GITHUB_ENV"
     - name: Fetch image
       run: |
         mkdir -p "$TARGET_DIR"
         wget "https://kunde.byggekamera.no/?u=obos-fornebu&camera=BK0104&width=fullsize" -O "$TARGET_DIR/$(date '+%Y-%m-%d_%H:%M:%S').png"
-    - name: Rebuild manifest
-      run: |
-        node scripts/build_manifest.js --image "$TARGET_DIR/$(ls "$TARGET_DIR" | sort | tail -n 1)"
     - name: Commit file
       run: |
         git config --global user.name 'GitHub Actions'
         git config --global user.email 'github-actions@github.com'
-        git add archive manifest.json
-        git commit -m "Add image and refresh manifest"
+        git add archive 
+        git commit -m "Add image"
         git push
