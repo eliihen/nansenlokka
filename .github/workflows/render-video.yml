@@ -40,7 +40,7 @@ jobs:
       - name: Determine archive months
         id: months
         run: |
-          MONTHS=$(git ls-tree -d --name-only HEAD archive | grep -E 'archive/[0-9]{4}/[0-9]{2}$' | sort)
+          MONTHS=$(git ls-tree -r -d --name-only HEAD archive | grep -E 'archive/[0-9]{4}/[0-9]{2}$' | sort)
           if [ -z "$MONTHS" ]; then
             echo "No archive months found."
             exit 1
