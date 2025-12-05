@@ -30,6 +30,9 @@ jobs:
         sparse-checkout-cone-mode: true
     - name: Fetch image
       run: |
+        YEAR=$(date '+%Y')
+        MONTH=$(date '+%m')
+        TARGET_DIR="archive/$YEAR/$MONTH"
         mkdir -p "$TARGET_DIR"
         wget "https://kunde.byggekamera.no/?u=obos-fornebu&camera=BK0104&width=fullsize" -O "$TARGET_DIR/$(date '+%Y-%m-%d_%H:%M:%S').png"
     - name: Commit file
