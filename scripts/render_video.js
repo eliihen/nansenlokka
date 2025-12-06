@@ -188,8 +188,10 @@ async function writeListFile(paths) {
 }
 
 function runFFmpeg(args) {
+  const commonFlags = ["-hide_banner", "-loglevel", "warning", "-nostats"];
+  const fullArgs = [...commonFlags, ...args];
   return new Promise((resolve, reject) => {
-    const proc = spawn("ffmpeg", args, { stdio: "inherit" });
+    const proc = spawn("ffmpeg", fullArgs, { stdio: "inherit" });
     proc.on("close", (code) => {
       if (code === 0) return resolve();
       reject(new Error(`ffmpeg exited with code ${code}`));
