@@ -1,14 +1,8 @@
 name: Render timelapse video
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - "archive/**"
-      - "scripts/render_video.js"
-      - ".github/workflows/render-video.yml"
-      - "index.html"
-      - "assets/**"
+  schedule:
+    - cron: "0 0 * * *"
   workflow_dispatch:
 
 permissions:
