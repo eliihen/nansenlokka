@@ -47,27 +47,42 @@ jobs:
           MONTHS_FILE: ${{ steps.months.outputs.months_file }}
           FPS: 30
           TMP_DIR: /tmp/monthly_videos
+          ACCUM: /tmp/timelapse_accum.mp4
         run: |
           set -euo pipefail
           mkdir -p "$TMP_DIR"
+          git sparse-checkout set scripts
           while read -r MONTH; do
             if [ -z "$MONTH" ]; then continue; fi
             echo "Processing $MONTH"
-            git sparse-checkout set assets scripts "$MONTH"
+            git sparse-checkout set scripts "$MONTH"
             OUT_NAME=$(echo "$MONTH" | sed 's#/#-#g').mp4
             node scripts/render_video.js month --source "$MONTH" --output "$TMP_DIR/$OUT_NAME" --fps "$FPS"
+            if [ ! -f "$ACCUM" ]; then
+              mv "$TMP_DIR/$OUT_NAME" "$ACCUM"
+            else
+              echo "Adding $MONTH to accumulated video"
+              node scripts/render_video.js concat --inputs "$ACCUM" "$TMP_DIR/$OUT_NAME" --output "$ACCUM.next"
+              mv "$ACCUM.next" "$ACCUM"
+              rm -f "$TMP_DIR/$OUT_NAME"
+            fi
+            git sparse-checkout set scripts
+            echo "Done with $MONTH"
           done < "$MONTHS_FILE"
-          ls -lh "$TMP_DIR"
+          ls -lh "$TMP_DIR" || true
 
-      - name: Concatenate monthly videos
+      - name: Write accumulated video
         env:
-          TMP_DIR: /tmp/monthly_videos
+          ACCUM: /tmp/timelapse_accum.mp4
         run: |
           set -euo pipefail
-          git sparse-checkout set assets scripts
+          git sparse-checkout set assets
           mkdir -p assets
-          INPUTS=$(ls "$TMP_DIR"/*.mp4 | sort)
-          node scripts/render_video.js concat --inputs $INPUTS --output assets/timelapse.mp4
+          if [ ! -f "$ACCUM" ]; then
+            echo "No accumulated video found."
+            exit 1
+          fi
+          cp "$ACCUM" assets/timelapse.mp4
 
       - name: Commit updated video
         run: |
