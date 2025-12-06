@@ -62,8 +62,9 @@ jobs:
               mv "$TMP_DIR/$OUT_NAME" "$ACCUM"
             else
               echo "Adding $MONTH to accumulated video"
-              node scripts/render_video.js concat --inputs "$ACCUM" "$TMP_DIR/$OUT_NAME" --output "$ACCUM.next"
-              mv "$ACCUM.next" "$ACCUM"
+              ACCUM_NEXT="${ACCUM%.mp4}.next.mp4"
+              node scripts/render_video.js concat --inputs "$ACCUM" "$TMP_DIR/$OUT_NAME" --output "$ACCUM_NEXT"
+              mv "$ACCUM_NEXT" "$ACCUM"
               rm -f "$TMP_DIR/$OUT_NAME"
             fi
             git sparse-checkout set scripts
