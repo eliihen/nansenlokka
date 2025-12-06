@@ -61,7 +61,10 @@ function parseArgs(argv) {
   if (command === "month" && (!opts.source || !opts.output)) {
     usage("month requires --source and --output");
   }
-  if (command === "concat" && (!opts.inputs || !opts.inputs.length || !opts.output)) {
+  if (
+    command === "concat" &&
+    (!opts.inputs || !opts.inputs.length || !opts.output)
+  ) {
     usage("concat requires --inputs and --output");
   }
   return {
@@ -78,7 +81,7 @@ function usage(message) {
   console.error(
     `Usage:
   node scripts/render_video.js month --source archive/YYYY/MM --output /tmp/month.mp4 [--fps 30]
-  node scripts/render_video.js concat --inputs file1.mp4 file2.mp4 --output assets/timelapse.mp4`,
+  node scripts/render_video.js concat --inputs file1.mp4 file2.mp4 --output assets/timelapse.mp4`
   );
   process.exit(1);
 }
@@ -92,6 +95,7 @@ async function renderMonth(sourceDir, outputPath, fps) {
   const listFile = await writeListFile(frames);
   try {
     const args = [
+      "-nostdin",
       "-y",
       "-f",
       "concat",
@@ -122,7 +126,19 @@ async function concatMonths(inputs, outputPath) {
   await fs.mkdir(path.dirname(outputPath), { recursive: true });
   const listFile = await writeListFile(inputs);
   try {
-    const args = ["-y", "-f", "concat", "-safe", "0", "-i", listFile, "-c", "copy", outputPath];
+    const args = [
+      "-nostdin",
+      "-y",
+      "-f",
+      "concat",
+      "-safe",
+      "0",
+      "-i",
+      listFile,
+      "-c",
+      "copy",
+      outputPath,
+    ];
     await runFFmpeg(args);
   } finally {
     await fs.rm(listFile, { force: true });
@@ -165,7 +181,8 @@ function withinDaylight(filename) {
 async function writeListFile(paths) {
   const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "ffmpeg-list-"));
   const listPath = path.join(tmpDir, "list.txt");
-  const lines = paths.map((p) => `file '${p.replace(/'/g, "'\\\\''")}'`).join("\n") + "\n";
+  const lines =
+    paths.map((p) => `file '${p.replace(/'/g, "'\\\\''")}'`).join("\n") + "\n";
   await fs.writeFile(listPath, lines, "utf8");
   return listPath;
 }
