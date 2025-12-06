@@ -18,7 +18,7 @@ pre-rendered MP4 timelapse.
 - `.github/workflows/render-video.yml` runs on each push:
   - Determines available months without checking out the archive.
   - Sparse-checks out one month at a time, renders a monthly MP4 with FFmpeg, writes it to
-    `/tmp`.
+    `/tmp` (only Monday–Friday, 07:00–17:59 UTC frames are kept based on filename times).
   - After all months are processed, concatenates the month videos into
     `assets/timelapse.mp4`.
   - Only one month is checked out at any point to keep disk usage low.

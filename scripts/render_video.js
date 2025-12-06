@@ -109,6 +109,10 @@ async function renderMonth(sourceDir, outputPath, fps) {
       `fps=${fps},format=yuv420p`,
       "-c:v",
       "libx264",
+      "-preset",
+      "veryslow",
+      "-crf",
+      "28",
       "-pix_fmt",
       "yuv420p",
       "-movflags",
@@ -172,10 +176,26 @@ function withinDaylight(filename) {
   const stem = filename.replace(path.extname(filename), "");
   const parts = stem.split("_");
   if (parts.length < 2) return false;
-  const timePart = parts[1];
-  const hourStr = timePart.split(":")[0];
-  const hour = Number.parseInt(hourStr, 10);
-  return Number.isInteger(hour) && hour >= 7 && hour < 18;
+
+  const date = parseDateFromFilename(parts[0], parts[1]);
+  if (!date) return false;
+
+  const day = date.getUTCDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+  if (day === 0 || day === 6) return false;
+
+  const hour = date.getUTCHours();
+  return hour >= 7 && hour < 17 + 1; // 7:00 through 17:59
+}
+
+function parseDateFromFilename(datePart, timePart) {
+  const [year, month, day] = datePart.split("-").map((v) => Number.parseInt(v, 10));
+  const [hour, minute, second] = timePart.split(":").map((v) => Number.parseInt(v, 10));
+  if ([year, month, day, hour, minute, second].some((v) => !Number.isInteger(v))) {
+    return null;
+  }
+  const value = Date.UTC(year, month - 1, day, hour, minute, second);
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
 }
 
 async function writeListFile(paths) {
