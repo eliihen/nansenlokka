@@ -89,6 +89,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add assets/timelapse.mp4
+          git add --sparse assets/timelapse.mp4
           git commit -m "Update timelapse video"
           git push
