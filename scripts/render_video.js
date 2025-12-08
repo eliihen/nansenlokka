@@ -114,9 +114,6 @@ async function renderMonth(sourceDir, outputPath, fps) {
       "-crf",
       "28",
       "-pix_fmt",
-      "yuv420p",
-      "-movflags",
-      "+faststart",
       outputPath,
     ];
     await runFFmpeg(args);
@@ -208,7 +205,7 @@ async function writeListFile(paths) {
 }
 
 function runFFmpeg(args) {
-  const commonFlags = ["-hide_banner", "-loglevel", "warning", "-nostats"];
+  const commonFlags = ["-hide_banner", "-loglevel", "warning", "-nostats", "-movflags", "+faststart", "yuv420p"]; 
   const fullArgs = [...commonFlags, ...args];
   return new Promise((resolve, reject) => {
     const proc = spawn("ffmpeg", fullArgs, { stdio: "inherit" });
