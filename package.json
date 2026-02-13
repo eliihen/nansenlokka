@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "start": "node scripts/dev-server.js",
-    "clean:manifest": "node scripts/clean_manifest.js"
+    "clean:manifest": "node scripts/clean_manifest.js",
+    "rebuild:manifest": "node scripts/rebuild_manifest.js"
   }
 }

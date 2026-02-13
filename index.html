@@ -21,16 +21,23 @@
     <div class="layout">
       <header class="header">
         <p class="eyebrow">Nansenløkka // Timelapse</p>
-        <h1>Pre-rendered and refreshed on every commit.</h1>
         <p class="lede">
-          Each push renders monthly clips with FFmpeg, then stitches them into a single MP4. No
-          client-side buffering—just hit play.
+          Stream the pre-rendered timelapse, or switch to the raw timeline and view every archived photo.
         </p>
       </header>
 
       <main class="main">
         <section class="stage">
-          <div class="frame video-shell">
+          <div class="mode-switch" role="group" aria-label="Viewer mode">
+            <button class="button mode-toggle is-active" type="button" data-mode-target="video" aria-pressed="true">
+              Video
+            </button>
+            <button class="button mode-toggle" type="button" data-mode-target="raw" aria-pressed="false">
+              Raw timeline
+            </button>
+          </div>
+
+          <div class="frame video-shell" data-mode-panel="video">
             <video
               class="timelapse"
               controls
@@ -45,19 +52,32 @@
               <a href="assets/timelapse.mp4">download the timelapse</a> instead.
             </video>
           </div>
-          <div class="controls single">
+
+          <div class="frame raw-shell" data-mode-panel="raw" hidden>
+            <button class="image-arrow image-arrow-prev" id="timeline-prev" type="button" aria-label="Previous frame">
+              ‹
+            </button>
+            <img class="timelapse raw-image" id="timeline-image" alt="Raw timeline frame" loading="eager" />
+            <button class="image-arrow image-arrow-next" id="timeline-next" type="button" aria-label="Next frame">
+              ›
+            </button>
+          </div>
+
+          <div class="controls single" data-mode-panel="video">
             <a class="button" href="assets/timelapse.mp4" download>Download MP4</a>
-            <p class="note">
-              Clips are rendered one month at a time from daylight frames, then concatenated in
-              chronological order to keep build sizes lean.
-            </p>
+          </div>
+
+          <div class="controls timeline-controls" data-mode-panel="raw" hidden>
+            <label class="scrubber-label" for="timeline-date">Jump to date (UTC)</label>
+            <input id="timeline-date" type="date" disabled />
+            <label class="scrubber-label" for="timeline-scrubber">Scrub frames</label>
+            <input id="timeline-scrubber" type="range" min="0" max="0" step="1" value="0" disabled />
+            <p id="timeline-meta" class="note">Select a frame to begin.</p>
+            <p id="timeline-status" class="note status" aria-live="polite"></p>
           </div>
         </section>
       </main>
-
-      <footer class="footer">
-        <p>The video refreshes automatically after each commit.</p>
-      </footer>
     </div>
+    <script src="assets/timeline.js" defer></script>
   </body>
 </html>

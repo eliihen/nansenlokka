@@ -4,10 +4,8 @@
   line-height: 1.5;
   background: #060c19;
   color: #e7edf4;
-  --bg: #050a14;
   --panel: rgba(10, 16, 28, 0.8);
   --border: rgba(255, 255, 255, 0.08);
-  --accent: #5cf0c4;
   --muted: rgba(231, 237, 244, 0.7);
 }
 
@@ -15,6 +13,10 @@
 *::before,
 *::after {
   box-sizing: border-box;
+}
+
+[hidden] {
+  display: none !important;
 }
 
 body {
@@ -50,12 +52,6 @@ body {
   margin: 0 0 0.35rem;
 }
 
-.header h1 {
-  margin: 0;
-  font-size: clamp(2.5rem, 4vw, 3.3rem);
-  letter-spacing: -0.02em;
-}
-
 .lede {
   margin: 0.75rem 0 0;
   max-width: 66ch;
@@ -77,6 +73,13 @@ body {
   backdrop-filter: blur(10px);
 }
 
+.mode-switch {
+  display: inline-flex;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
 .frame {
   position: relative;
   width: 100%;
@@ -94,6 +97,46 @@ body {
   background: #000;
 }
 
+.raw-image {
+  object-fit: contain;
+  min-height: 320px;
+}
+
+.raw-shell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.image-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(5, 12, 24, 0.75);
+  color: #f5fbff;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 2;
+}
+
+.image-arrow:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.image-arrow-prev {
+  left: 0.8rem;
+}
+
+.image-arrow-next {
+  right: 0.8rem;
+}
+
 .controls {
   margin-top: 1rem;
   display: flex;
@@ -104,6 +147,32 @@ body {
 
 .controls.single {
   justify-content: space-between;
+}
+
+.timeline-controls {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.scrubber-label {
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.74rem;
+}
+
+input[type="range"] {
+  width: 100%;
+}
+
+input[type="date"] {
+  width: fit-content;
+  max-width: 100%;
+  border: 1px solid var(--border);
+  background: #0d192b;
+  color: #f5fbff;
+  border-radius: 10px;
+  padding: 0.55rem 0.7rem;
 }
 
 .button {
@@ -117,6 +186,16 @@ body {
   transition: transform 120ms ease, border-color 150ms ease, box-shadow 150ms ease;
   text-transform: uppercase;
   letter-spacing: 0.08em;
+  text-decoration: none;
+}
+
+.mode-toggle {
+  padding: 0.7rem 0.95rem;
+}
+
+.mode-toggle.is-active {
+  border-color: rgba(92, 240, 196, 0.7);
+  box-shadow: 0 0 0 1px rgba(92, 240, 196, 0.3) inset;
 }
 
 .button:hover {
@@ -135,10 +214,8 @@ body {
   max-width: 60ch;
 }
 
-.footer {
-  color: var(--muted);
-  font-size: 0.95rem;
-  margin-top: 0.5rem;
+.status {
+  min-height: 1.5em;
 }
 
 @media (max-width: 840px) {

@@ -6,6 +6,8 @@ pre-rendered MP4 timelapse.
 ## Timelapse website
 
 - `index.html` serves a single pre-rendered `assets/timelapse.mp4`.
+- The raw timeline reads `manifest.json.gz` (gzip) and falls back to `manifest.json`.
+- `manifest.json` uses a compact nested-array format for frame data: `images: [[path, epochSeconds], ...]`.
 - The latest static site is deployed automatically to GitHub Pages from `main`
   (`.github/workflows/pages.yml`).
 - The video is rebuilt after every commit: each archive month renders separately, then all
@@ -41,3 +43,11 @@ npm start
 ```
 
 Then open http://localhost:8000 to see the timelapse.
+
+## Manifest rebuild
+
+Rebuild the manifest from scratch from `archive/**`:
+
+```bash
+npm run rebuild:manifest
+```
