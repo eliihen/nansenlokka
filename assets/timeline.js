@@ -11,6 +11,7 @@ const nextButton = document.getElementById('timeline-next');
 
 let timelineImages = [];
 let pendingIndex = -1;
+const GITHUB_RAW_BASE = 'https://raw.githubusercontent.com/eliihen/nansenlokka/main/';
 
 function toIsoTimestamp(value) {
   if (typeof value === 'number' && Number.isFinite(value)) {
@@ -37,16 +38,22 @@ function normalizeManifestImages(manifest) {
     if (Array.isArray(entry) && typeof entry[0] === 'string') {
       const timestamp = toIsoTimestamp(entry[1]);
       if (!timestamp) continue;
-      result.push({ path: entry[0], timestamp });
+      result.push({ path: toRawImageUrl(entry[0]), timestamp });
       continue;
     }
     if (entry && typeof entry === 'object' && typeof entry.path === 'string') {
       const timestamp = toIsoTimestamp(entry.timestamp);
       if (!timestamp) continue;
-      result.push({ path: entry.path, timestamp });
+      result.push({ path: toRawImageUrl(entry.path), timestamp });
     }
   }
   return result;
+}
+
+function toRawImageUrl(pathValue) {
+  if (/^https?:\/\//i.test(pathValue)) return pathValue;
+  const normalized = pathValue.replace(/^\/+/, '');
+  return `${GITHUB_RAW_BASE}${normalized}`;
 }
 
 async function fetchManifestGzip() {
